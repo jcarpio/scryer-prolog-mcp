@@ -1,9 +1,12 @@
-# Using Scryer Prolog MCP with Dify
+# Dify + Ollama + Scryer Prolog MCP: a working CLP(Z) example
 
 This guide connects a local Scryer Prolog MCP server to a self-hosted Dify instance
 running in Docker Desktop on macOS. It covers installation checks, the HTTP bridge,
 authentication, the Docker-to-host connection, a narrowly scoped Squid exception,
-and a first integer-constraint example.
+and a complete tested workflow that executes integer constraints and explains the real result using a local Ollama model.
+
+The workflow is **User Input → runPrologQuery → Code → LLM → Output**.
+Scryer computes the solutions; Python serializes the tool response; the LLM explains it. No agent tool-selection loop is required.
 
 The integration is general-purpose: use it for knowledge-base queries, logic
 exercises, constraint solving, planning, or scheduling.
@@ -23,9 +26,12 @@ The following were observed during setup on November 3, 2026:
 | HTTP initialization through Supergateway | Returned HTTP 200 and MCP server metadata |
 | Dify connection before proxy exception | Failed with Squid `TCP_DENIED/403` |
 | Dify connection after proxy exception | Authorized; all four tools discovered |
-| CLP(Z) execution from a Dify application | Next validation step; instructions below |
+| CLP(Z) execution from a Dify workflow | Passed; returned `[[1,2],[1,3],[2,3]]` |
+| Code node receives the MCP JSON response | Passed after matching the input and Python parameter names |
+| Local Ollama model receives the actual result | Passed with `llama3.2:latest` |
+| Full five-node workflow | Completed successfully; final explanation generated in English |
 
-Tool discovery confirms connectivity, not execution of a complete application.
+The complete workflow was subsequently tested, in addition to tool discovery. The first generated explanation contained terminology errors; the improved prompt below addresses them. That revised prompt is a recommendation, not a separately verified screenshot result.
 Audit results and third-party interfaces may change. Supergateway's exact package
 version was not captured in the original session; the unpinned command below
 reproduces the setup method rather than a fully locked environment.
@@ -54,8 +60,8 @@ remote Linux deployment.
 - Node.js 20 or later, npm, Git, and Python 3 for the optional proxy edit.
 - Scryer Prolog installed and executable.
 - This repository checked out locally.
-- For the optional conversational test: a model provider configured in Dify and a
-  model capable of using tools.
+- Ollama installed on the Mac, with `llama3.2:latest` available.
+- The Ollama provider installed and configured in Dify. This workflow uses a regular LLM node, so model tool calling is not required.
 
 Example checkout:
 
@@ -169,7 +175,7 @@ value in Dify. Do not commit real keys to Git.
 | --- | --- |
 | `--stdio` | Starts this repository's MCP entry point |
 | `--outputTransport streamableHttp` | Provides HTTP MCP at `/mcp` |
-| `--stateful` | Enables legacy transport sessions |
+| `--stateful` | Enables stateful HTTP transport sessions |
 | `--sessionTimeout 3600000` | Sets the bridge session timeout to one hour |
 | `--port 8000` | Chooses the host TCP port |
 | `--apiKey` | Requires a key on incoming MCP requests |
@@ -248,6 +254,10 @@ Successful registration shows **Authorized / Autorizado** and these four tools:
 | `runPrologQuery` | Execute a query and return its first solution |
 | `saveSession` | Save source under a simple filename |
 | `loadSession` | Validate and restore saved source |
+
+![The integration is authorized and exposes four tools.](screenshots/02-mcp-authorized.png)
+
+*The initial connection screenshots use the Spanish interface. The workflow screenshots below use English.*
 
 ## 8. Diagnose HTTP 403 before changing configuration
 
@@ -397,55 +407,61 @@ Restoring an old backup also restores its other settings. Review the difference
 first if the template has changed since the backup. Keep environment-specific
 proxy configuration outside this MCP repository.
 
-## 10. First CLP(Z) test in a Dify application
+## 10. Configure local Ollama
 
-This section is a proposed next test. Registration and tool discovery were confirmed;
-this complete Dify application run was not yet observed when the guide was written.
+On the Mac, check available models:
 
-### Option A: fixed workflow (easier to diagnose)
-
-In Dify Studio, create a Workflow. Add two sequential tool nodes from the registered
-Scryer Prolog integration, then an output node. Labels vary by Dify version.
-
-1. Start node: no user input is required for this fixed test.
-2. `loadProgram` tool node: set `program` to the source below as a constant.
-3. `runPrologQuery` tool node: set `query` to the query below as a constant.
-4. Output node: expose the query tool's text output using Dify's variable picker.
-
-Program:
-
-```prolog
-:- use_module(library(clpz)).
-
-ascending_pair(X, Y) :-
-    [X,Y] ins 1..3,
-    X #< Y,
-    labeling([], [X,Y]).
+```bash
+ollama list
 ```
 
-Query:
+The tested model was `llama3.2:latest`. If it is not installed:
 
-```prolog
-findall([X,Y], ascending_pair(X,Y), Pairs).
+```bash
+ollama pull llama3.2:latest
 ```
 
-Expected semantic result:
+Keep Ollama running. In **Integrations → Model Provider**, install the Ollama provider if necessary, then add or configure the model:
 
-```prolog
-Pairs = [[1,2], [1,3], [2,3]]
+| Setting | Value |
+| --- | --- |
+| Base URL | `http://host.docker.internal:11434` |
+| Model name | `llama3.2:latest` |
+| Model type | LLM / Chat |
+
+Use the provider's Ollama base URL, without appending `/api` or `/v1`. The model configuration used an already configured credential entry. A local default Ollama installation does not normally require an API key; the UI's credential label alone does not imply a paid API.
+
+![Ollama model configuration in the tested installation.](screenshots/03-ollama-model.png)
+
+If the model cannot connect, verify Ollama's listener and Docker-to-host access. If a proxy returns 403, inspect its logs for port 11434 before changing rules. The port-8000 exception above does not cover Ollama. No additional Ollama proxy exception was needed in the observed run.
+
+## 11. Create the workflow
+
+Open **Studio → Create from scratch** and choose **Workflow**. Name it:
+
+```text
+Scryer MCP Connection Test
 ```
 
-The actual tool response is JSON carried in text content. It should have
-`status: "success"`; the result string includes variable-name bindings as a Prolog
-term, so it need not have exactly the pretty-printed form above.
+Choose **User Input** as the start node. No custom input fields are required: this first example uses a fixed query.
 
-Inspect each tool node's trace. The load must complete before the query. If the
-second tool cannot find `ascending_pair/2`, do not assume the source persisted:
-Dify may have used a separate MCP transport session.
+![Choose User Input as the workflow start node.](screenshots/04-workflow-start.png)
 
-### Session-independent fallback
+Build the following sequence using each node's **+** or **Select Next Step** control:
 
-To distinguish session reuse from CLP(Z) support, run a single query tool call:
+| Order | Node | Purpose |
+| --- | --- | --- |
+| 1 | User Input | Starts the test manually |
+| 2 | Scryer Prolog → runPrologQuery | Executes the fixed CLP(Z) query |
+| 3 | Code, Python 3 | Converts the JSON response into a string |
+| 4 | LLM, Ollama | Explains the real tool output in English |
+| 5 | Output | Returns the explanation |
+
+When selecting a tool, open **Tools → MCP → Scryer Prolog → runPrologQuery**. The final node is named **Output** in the tested interface. Other Dify versions may use different labels.
+
+## 12. Configure runPrologQuery
+
+In **Settings → Input Variables**, paste the following directly into **query** as a constant. Do not wrap it in JSON, add `?-`, or insert an agent `action` envelope.
 
 ```prolog
 use_module(library(clpz)),
@@ -455,42 +471,196 @@ read_term_from_chars(
     [variable_names(Names)]
 ),
 call(Goal),
-write_term(Names, [quoted(true)]), nl.
+write_term(Names, [quoted(true)]),
+nl.
 ```
 
-Both the two-call example and the single-call fallback were also checked directly
-with the native Scryer backend while preparing this guide. The Dify application
-execution itself remains to be verified.
+Set **template** to the string:
 
-The current engine imports `library(charsio)` internally. Parsing the constraint
-expression after importing CLP(Z) avoids relying on operators from an earlier
-call. This prints the binding for `Pairs` in stdout and does not depend on a prior
-`loadProgram` call. This is a diagnostic pattern, not an application architecture.
+```text
+true
+```
 
-### Option B: conversational agent
+This is a Prolog term supplied through a string field, not a JSON boolean. Leave retry disabled for this first test.
 
-Configure a tool-capable model provider, create an agent application or an Agent
-node in your workflow, and attach `loadProgram` and `runPrologQuery`. For the first
-test, saving and loading disk sessions are unnecessary.
+![The query node exposes query and template fields.](screenshots/05-query-settings.png)
 
-Suggested instructions:
+### Why this query works without loadProgram
 
-> You are a Prolog assistant connected to Scryer Prolog tools. Execute requested
-> logic and constraint examples using the tools. Include library(clpz) when needed.
-> Load the program before querying it. Inspect the tool status and report errors
-> accurately. Do not claim execution if no tool ran. Use findall/3 to collect
-> multiple solutions. Do not execute file, shell, or network operations.
+This example deliberately performs all computation in one tool call. It does not rely on source loaded by a previous call or on transport-session reuse.
 
-Suggested user request:
+1. `use_module(library(clpz))` imports integer constraints.
+2. `read_term_from_chars/3` parses the quoted constraint goal after the import, when operators such as `in` and `#<` are available. The engine already imports `library(charsio)` internally.
+3. `X in 1..3` and `Y in 1..3` constrain both variables to integers 1, 2, or 3.
+4. `X #< Y` requires the first integer to be strictly smaller.
+5. `labeling([], [X,Y])` enumerates concrete assignments.
+6. `findall/3` collects every pair in `Pairs`.
+7. `write_term/2` prints the named bindings to stdout.
 
-> Use Scryer Prolog and CLP(Z) to find every ordered pair of integers X and Y
-> between 1 and 3 satisfying X < Y. Show the executed query and the actual result.
+The expected solution list is:
 
-Check the execution trace for real tool calls and compare the three expected
-pairs. Model-generated text alone is not proof that Scryer ran. Prompt instructions
-do not replace operating-system isolation for untrusted code.
+```prolog
+[[1,2], [1,3], [2,3]]
+```
 
-## 11. Source state, transport sessions, and limits
+### Test the tool node first
+
+Use the small run button in the query node panel. Inspect **Last Run**. The observed response had `status: "success"`, empty `stderr`, and stdout containing:
+
+```text
+['X'=_595872,'Y'=_595877,'Pairs'=[[1,2],[1,3],[2,3]]]
+```
+
+Internal identifiers such as `_595872` vary. X and Y remain unbound outside the collected goal because `findall/3` collects its solutions without binding those outer variables. The ground list in `Pairs` is the relevant answer.
+
+![The query node succeeds and returns the three pairs.](screenshots/06-query-success.png)
+
+**Important:** in this Dify integration, the tool's JSON-formatted text content was parsed into the **json** output, while **text** was an empty string. Passing `runPrologQuery → text` to the LLM therefore sent no result.
+
+![Tracing shows an empty text field and a populated json array.](screenshots/07-json-not-text.png)
+
+## 13. Configure the Code node
+
+Add **Code** after the query node. Select **Python 3**.
+
+Configure exactly one input variable:
+
+| Input name | Value selected using Dify's variable picker |
+| --- | --- |
+| `result` | `runPrologQuery → json` |
+
+Delete unused default inputs such as `arg1` and `arg2`. `result` is the name of the Code node input; it is separate from each object's own `result` property inside the array.
+
+Paste this code:
+
+```python
+import json
+
+
+def main(result: list) -> dict:
+    return {
+        "tool_output": json.dumps(result, ensure_ascii=False)
+    }
+```
+
+Under **Output Variables**, configure:
+
+| Name | Type |
+| --- | --- |
+| `tool_output` | String |
+
+The input variable must be named **result**, exactly matching `main(result: list)`. Using `results`, `arg1`, or an extra input causes an unexpected-keyword error unless the function signature is changed to match.
+
+Test the node. Its input should contain the actual response array, not `null`, and its output should contain a nonempty `tool_output` string. The code only serializes existing data: it does not solve the problem or fabricate results.
+
+If the variable picker does not initially list `json`, expand the query node's **Output Variables**, check that the tool has completed a successful run, and inspect the available output schema. Do not silently select empty `text` as a substitute.
+
+## 14. Configure the LLM node
+
+Add an **LLM** node after Code. Select the configured Ollama model **llama3.2:latest**. Leave vision disabled; this example contains no images as model inputs.
+
+Use this **SYSTEM** message:
+
+```text
+Explain the actual Scryer Prolog tool output in clear, concise English.
+
+Report whether execution succeeded.
+List the pairs returned.
+Explain that X and Y are integers from 1 to 3 and X must be strictly less than Y.
+Explain that labeling/2 enumerates concrete integer assignments and findall/3 collects all solutions.
+
+Goal, Names, and Pairs are variable names, not atoms describing separate results.
+Identifiers such as _595872 are internal variable names; omit them from your explanation.
+Do not describe the two-element pair structure as an additional constraint.
+
+If execution failed, report the actual error.
+Do not invent results or claim that you executed the query yourself.
+```
+
+This prompt is specific to the fixed example. Update it when changing the query rather than retaining the 1-to-3 description for a different problem.
+
+![The LLM node uses the local Ollama model and an English system message.](screenshots/08-llm-settings.png)
+
+Click **Add Message**, choose **USER**, and enter:
+
+```text
+Explain this actual Scryer Prolog tool output:
+
+```
+
+Below that text, insert **Code → tool_output** using the variable picker (`/` or the variable control). Select the actual variable token; typing a descriptive label such as `Code → tool_output` as ordinary text does not bind the value.
+
+Do not select `runPrologQuery → text`: that field was empty in this test.
+
+The earlier screenshot below shows how to open the variable picker, before the Code node was added. For the completed workflow, select **Code → tool_output**, not the old query-node text field shown in that screenshot.
+
+![Use the variable picker to insert a node output into the USER message.](screenshots/09-variable-picker.png)
+
+The LLM's resolved prompt must include the response after the heading. Inspect **Tracing → LLM** after a full run to verify it. If the prompt ends immediately after the heading, the data binding is still missing.
+
+## 15. Configure Output and run the complete example
+
+Add **Output** after LLM. Define:
+
+| Output variable name | Selected value |
+| --- | --- |
+| `explanation` | `LLM → text` |
+
+![Configure the final Output node with a named output variable.](screenshots/10-output-settings.png)
+
+Check that the connections form one continuous path through all five nodes. Click **Test Run** at the top, then run the workflow. No input values are required for this fixed example. Publishing is not required for an editor test.
+
+Success means:
+
+- All five nodes complete successfully in the current run's trace.
+- The query node returns `status: "success"` and the three pairs.
+- Code outputs a nonempty `tool_output` string.
+- The LLM receives that string in its USER prompt.
+- Output returns an English explanation.
+
+A representative concise explanation is:
+
+```text
+The query executed successfully and returned three pairs:
+[1,2], [1,3], and [2,3].
+
+These are all pairs of integers X and Y between 1 and 3
+for which X is strictly less than Y.
+
+labeling/2 enumerates the concrete assignments, and
+findall/3 collects all solutions. No errors were reported.
+```
+
+The exact wording is model-generated and may vary. The Prolog answer must remain the same.
+
+![The complete five-node workflow succeeds and produces an English explanation.](screenshots/11-complete-workflow.png)
+
+*This screenshot records the successful run with the earlier system prompt. Its explanation correctly lists the pairs but incorrectly describes some variable names as atoms. The refined SYSTEM prompt above was proposed afterwards to improve terminology; the screenshot does not demonstrate that revised prompt.*
+
+## 16. Troubleshoot the workflow data flow
+
+| Symptom | Cause observed or check to perform | Fix |
+| --- | --- | --- |
+| LLM asks for the missing output | The USER prompt contains only the heading | Insert Code → tool_output and inspect the resolved prompt |
+| Query succeeds but `text` is empty | Dify put the parsed response in `json` | Bind Code's input to runPrologQuery → json |
+| `main() got an unexpected keyword argument 'arg1'` | Default input name does not match the Python parameter | Delete defaults; use input `result` and `main(result: list)` |
+| `unexpected keyword argument 'result'; did you mean 'results'?` | Singular/plural mismatch | Use `result` consistently in the input name and code |
+| Code input is `null` | Input has no selected upstream value | Select the real query-node json output |
+| Output variable missing | Returned dictionary key and declared output differ | Declare `tool_output` as String and return that exact key |
+| Green tool node but inaccurate explanation | Model interpretation error | Check raw JSON, use the refined prompt, and compare all three pairs |
+| Old error still appears | Viewing a previous test's trace | Run a fresh Test Run after saving settings |
+
+![An earlier failed run illustrates a result/results naming mismatch; the JSON input already contains the correct data.](screenshots/12-input-name-error.png)
+
+### Why the legacy ReAct agent was not used for the working example
+
+The initial legacy-agent experiment sometimes printed simulated observations, supplied a plain string instead of an argument object, or repeatedly reloaded source. A displayed action in a model response is not proof of a tool invocation.
+
+The working workflow calls the MCP tool directly with configured fields. Ollama only explains the returned data, so success does not depend on the model producing a valid ReAct action envelope.
+
+For a future agent experiment, tool arguments must be objects such as `{"query":"..."}` or `{"program":"..."}`. The MCP's `loadProgram` field is **program**. Source that appears missing between tool calls warrants inspecting the actual load arguments and transport-session reuse; this session did not establish a definitive root cause for every legacy-agent failure.
+
+## 17. Source state, transport sessions, and limits
 
 - `loadProgram` replaces source; it does not append to it.
 - The MCP process stores that source in memory between calls to that process.
@@ -513,7 +683,7 @@ Do not promise cross-user isolation or persistent runtime state from the HTTP
 bridge. Use separate project processes and a deliberate storage model before
 building a shared service.
 
-## 12. Troubleshooting
+## 18. Connection troubleshooting
 
 | Symptom | Check or action |
 | --- | --- |
@@ -544,7 +714,7 @@ Inspect gateway output in its terminal. Redact credentials before sharing logs.
 Do not disable the entire SSRF proxy or allow all private destinations to resolve
 one host/port connection problem.
 
-## 13. Stop and resume
+## 19. Stop and resume
 
 Stop the bridge with Ctrl+C in its terminal. This does not stop Dify or delete saved
 source files. To resume, start the bridge again, check the integration, and reload
@@ -554,14 +724,24 @@ by a Dify configuration update; recheck it after upgrades.
 For a temporary demonstration, remove the three Scryer-specific ACL lines or
 restore the reviewed backup when access is no longer needed, then restart the proxy.
 
-## 14. Save this example in Git
+## 20. Save this example in Git
 
-The repository layout for this guide is `examples/dify/README.md`. Once it is in
-your checkout, review and commit only the documentation change:
+Copy the supplied `examples/dify` directory into your repository root, keeping the screenshot directory alongside README.md. This is a documentation-only update; it does not change the MCP implementation.
+
+```text
+examples/dify/
+  README.md
+  screenshots/
+    02-mcp-authorized.png
+    ...
+```
+
+Review and commit the guide and images together:
 
 ```bash
 git diff -- examples/dify/README.md
-git add examples/dify/README.md
+git status --short -- examples/dify/
+git add examples/dify/
 git commit -m "Document local Dify integration with Scryer Prolog MCP"
 git push
 ```
