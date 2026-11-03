@@ -1,0 +1,9 @@
+{
+  "name": "scryer-prolog-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"start":"node index.mjs","test":"node smoke.mjs && node mcp-test.mjs"},
+  "dependencies": {"@modelcontextprotocol/sdk":"1.0.1"},
+  "engines": {"node":">=20"}
+}
