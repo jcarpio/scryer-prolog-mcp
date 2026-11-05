@@ -1,0 +1,62 @@
+{
+  "class": "1a",
+  "days": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri"
+  ],
+  "rows": [
+    [
+      "mat",
+      "mat",
+      "mat",
+      "mat",
+      "mat"
+    ],
+    [
+      "deu",
+      "deu",
+      "deu",
+      "deu",
+      null
+    ],
+    [
+      "eng",
+      "eng",
+      "bio",
+      "h",
+      null
+    ],
+    [
+      "lat",
+      "lat",
+      "ch",
+      "lat",
+      null
+    ],
+    [
+      "bio",
+      "geo",
+      "eng",
+      "ph",
+      null
+    ],
+    [
+      "ch",
+      "h",
+      "f",
+      null,
+      null
+    ],
+    [
+      "f",
+      "ph",
+      "geo",
+      null,
+      null
+    ]
+  ],
+  "uncertainties": []
+}

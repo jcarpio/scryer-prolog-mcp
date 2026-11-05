@@ -9,6 +9,10 @@ const server=new Server({name:'scryer-prolog-mcp',version:'0.1.0'},{capabilities
 const schema=(properties,required)=>({type:'object',properties,required,additionalProperties:false});
 const string={type:'string'};
 server.setRequestHandler(ListToolsRequestSchema,async()=>({tools:[
+ {name:'runProgramQuery',
+ description:'Run a supplied Prolog program and query together in an isolated Scryer process. Does not change the stored program. Trusted local code only.',
+ inputSchema:schema({program:string,query:string,template:string},['program','query'])},
+
  {name:'loadProgram',description:'Validate and REPLACE the stored Prolog source. Include :- use_module(library(clpz)). for integer constraints. Trusted local code only.',inputSchema:schema({program:string},['program'])},
  {name:'runPrologQuery',description:'Run one query in a fresh Scryer process. Returns first solution as Prolog text, including variable bindings. Use findall/3 for multiple ground solutions. Query mutations do not persist.',inputSchema:schema({query:string,template:string},['query'])},
  {name:'saveSession',description:'Save loaded source (not runtime mutations) under a simple session name.',inputSchema:schema({filename:string},['filename'])},
@@ -17,7 +21,14 @@ server.setRequestHandler(ListToolsRequestSchema,async()=>({tools:[
 server.setRequestHandler(CallToolRequestSchema,async({params:{name,arguments:a={}}})=>{
  try {
   let result;
-  if(name==='loadProgram') result=await engine.loadProgram(a.program);
+  if(name==='runProgramQuery') {
+   if(typeof a.program!=='string' || a.program.length>1000000)
+     throw Error('Invalid program (maximum 1 MB)');
+   if(typeof a.query!=='string' || a.query.length>100000 ||
+      (a.template!==undefined && typeof a.template!=='string'))
+     throw Error('Invalid query or template');
+   result=await engine.run(a.program,a.query,a.template);
+  } else if(name==='loadProgram') result=await engine.loadProgram(a.program);
   else if(name==='runPrologQuery') {
    if(typeof a.query!=='string'||a.query.length>100000|| (a.template!==undefined && typeof a.template!=='string')) throw Error('Invalid query or template');
    result=await engine.query(a.query,a.template);

@@ -1,0 +1,412 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: workflow
+  name: Generate Timetable from Requirements
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.7.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload: {}
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: template-transform
+      id: 1793910482283-source-1793914819537-target
+      source: '1793910482283'
+      sourceHandle: source
+      target: '1793914819537'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: null
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: tool
+        targetType: end
+      id: 1793914212121-source-1793911877393-target
+      selected: false
+      source: '1793914212121'
+      sourceHandle: source
+      target: '1793911877393'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: null
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: template-transform
+        targetType: tool
+      id: 1793914819537-source-1793914212121-target
+      source: '1793914819537'
+      sourceHandle: source
+      target: '1793914212121'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: User Input
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: Reviewed Prolog requirements
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: requirements
+      height: 107
+      id: '1793910482283'
+      position:
+        x: -278.4527297229354
+        y: 162.55345944587128
+      positionAbsolute:
+        x: -278.4527297229354
+        y: 162.55345944587128
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        outputs:
+        - value_selector:
+          - '1793914212121'
+          - json
+          value_type: array[object]
+          variable: result
+        selected: false
+        title: Output
+        type: end
+      height: 86
+      id: '1793911877393'
+      position:
+        x: 453.721585698952
+        y: 201.48800831020142
+      positionAbsolute:
+        x: 453.721585698952
+        y: 201.48800831020142
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+      zIndex: 0
+    - data:
+        is_team_authorization: true
+        meta: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema: null
+          label:
+            en_US: program
+            ja_JP: program
+            pt_BR: program
+            zh_Hans: program
+          llm_description: ''
+          max: null
+          min: null
+          multiple: false
+          name: program
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema: null
+          label:
+            en_US: query
+            ja_JP: query
+            pt_BR: query
+            zh_Hans: query
+          llm_description: ''
+          max: null
+          min: null
+          multiple: false
+          name: query
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: ''
+            ja_JP: ''
+            pt_BR: ''
+            zh_Hans: ''
+          input_schema: null
+          label:
+            en_US: template
+            ja_JP: template
+            pt_BR: template
+            zh_Hans: template
+          llm_description: ''
+          max: null
+          min: null
+          multiple: false
+          name: template
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: string
+        params:
+          program: ''
+          query: ''
+          template: ''
+        plugin_id: ''
+        plugin_unique_identifier: ''
+        provider_icon:
+          background: '#6366F1'
+          content: 🔗
+        provider_icon_dark: null
+        provider_id: scryer-prolog
+        provider_name: Scryer Prolog
+        provider_show_name: Scryer Prolog
+        provider_type: mcp
+        selected: false
+        title: runProgramQuery
+        tool_configurations: {}
+        tool_description: Run a supplied Prolog program and query together in an isolated
+          Scryer process. Does not change the stored program. Trusted local code only.
+        tool_label: runProgramQuery
+        tool_name: runProgramQuery
+        tool_node_version: '2'
+        tool_parameters:
+          program:
+            type: mixed
+            value: '{{#1793914819537.output#}}'
+          query:
+            type: mixed
+            value: 'requirements_variables(Rs, Vs),
+
+              labeling([ff], Vs),
+
+              print_classes(Rs).'
+          template:
+            type: mixed
+            value: 'true'
+        type: tool
+      height: 82
+      id: '1793914212121'
+      position:
+        x: 182.71639144799468
+        y: 201.48800831020142
+      positionAbsolute:
+        x: 182.71639144799468
+        y: 201.48800831020142
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    - data:
+        selected: false
+        template: "/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\
+          \ - - - - - - -\n   Simsttab -- Simplistic school time tabler\n   Copyright\
+          \ (C) 2005-2022 Markus Triska triska@metalevel.at\n\n   This program is\
+          \ free software; you can redistribute it and/or modify\n   it under the\
+          \ terms of the GNU General Public License as published by\n   the Free Software\
+          \ Foundation; either version 2 of the License, or\n   (at your option) any\
+          \ later version.\n\n   This program is distributed in the hope that it will\
+          \ be useful,\n   but WITHOUT ANY WARRANTY; without even the implied warranty\
+          \ of\n   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
+          \   GNU General Public License for more details.\n\n   You should have received\
+          \ a copy of the GNU General Public License\n   along with this program;\
+          \ if not, write to the Free Software\n   Foundation, Inc., 59 Temple Place,\
+          \ Suite 330, Boston, MA  02111-1307  USA\n\n\n   For more information about\
+          \ this program, visit:\n\n          https://www.metalevel.at/simsttab/\n\
+          \          ==================================\n\n   Tested with Scryer Prolog.\n\
+          - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\
+          \ - */\n\n\n:- use_module(library(clpz)).\n:- use_module(library(dcgs)).\n\
+          :- use_module(library(reif)).\n:- use_module(library(pairs)).\n:- use_module(library(lists)).\n\
+          :- use_module(library(format)).\n:- use_module(library(pio)).\n\n:- dynamic(class_subject_teacher_times/4).\n\
+          :- dynamic(coupling/4).\n:- dynamic(teacher_freeday/2).\n:- dynamic(slots_per_day/1).\n\
+          :- dynamic(slots_per_week/1).\n:- dynamic(class_freeslot/2).\n:- dynamic(room_alloc/4).\n\
+          \n:- discontiguous(class_subject_teacher_times/4).\n:- discontiguous(class_freeslot/2).\n\
+          \n\n/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\
+          \ - - - -\n\t\t\t Posting constraints\n\n   The most important data structure\
+          \ in this CSP are pairs of the form\n\n      Req-Vs\n\n   where Req is a\
+          \ term of the form req(C,S,T,N) (see below), and Vs is\n   a list of length\
+          \ N. The elements of Vs are finite domain variables\n   that denote the\
+          \ *time slots* of the scheduled lessons of Req. We\n   call this list of\
+          \ Req-Vs pairs the requirements.\n\n   To break symmetry, the elements of\
+          \ Vs are constrained to be\n   strictly ascending (it follows that they\
+          \ are all_different/1).\n\n   Further, the time slots of each teacher are\
+          \ constrained to be\n   all_different/1.\n\n   For each requirement, the\
+          \ time slots divided by slots_per_day are\n   constrained to be strictly\
+          \ ascending to enforce distinct days,\n   except for coupled lessons.\n\n\
+          \   The time slots of each class, and of lessons occupying the same\n  \
+          \ room, are constrained to be all_different/1.\n\n   Labeling is performed\
+          \ on all slot variables.\n- - - - - - - - - - - - - - - - - - - - - - -\
+          \ - - - - - - - - - - - - - - */\n\n\nrequirements(Rs) :-\n        Goal\
+          \ = class_subject_teacher_times(Class,Subject,Teacher,Number),\n       \
+          \ setof(req(Class,Subject,Teacher,Number), Goal, Rs0),\n        maplist(req_with_slots,\
+          \ Rs0, Rs).\n\nreq_with_slots(R, R-Slots) :- R = req(_,_,_,N), length(Slots,\
+          \ N).\n\nclasses(Classes) :-\n        setof(C, S^N^T^class_subject_teacher_times(C,S,T,N),\
+          \ Classes).\n\nteachers(Teachers) :-\n        setof(T, C^S^N^class_subject_teacher_times(C,S,T,N),\
+          \ Teachers).\n\nrooms(Rooms) :-\n        findall(Room, room_alloc(Room,_C,_S,_Slot),\
+          \ Rooms0),\n        sort(Rooms0, Rooms).\n\nrequirements_variables(Rs, Vars)\
+          \ :-\n        requirements(Rs),\n        pairs_slots(Rs, Vars),\n      \
+          \  slots_per_week(SPW),\n        Max #= SPW - 1,\n        Vars ins 0..Max,\n\
+          \        maplist(constrain_subject, Rs),\n        classes(Classes),\n  \
+          \      teachers(Teachers),\n        rooms(Rooms),\n        maplist(constrain_teacher(Rs),\
+          \ Teachers),\n        maplist(constrain_class(Rs), Classes),\n        maplist(constrain_room(Rs),\
+          \ Rooms).\n\nslot_quotient(S, Q) :-\n        slots_per_day(SPD),\n     \
+          \   Q #= S // SPD.\n\n\nlist_without_nths(Es0, Ws, Es) :-\n        phrase(without_(Ws,\
+          \ 0, Es0), Es).\n\nwithout_([], _, Es) --> seq(Es).\nwithout_([W|Ws], Pos0,\
+          \ [E|Es]) -->\n        { Pos #= Pos0 + 1,\n          zcompare(R, W, Pos0)\
+          \ },\n        without_at_pos0(R, E, [W|Ws], Ws1),\n        without_(Ws1,\
+          \ Pos, Es).\n\nwithout_at_pos0(=, _, [_|Ws], Ws) --> [].\nwithout_at_pos0(>,\
+          \ E, Ws0, Ws0) --> [E].\n\n%:- list_without_nths(\"abcd\", [3], \"abc\"\
+          ).\n%:- list_without_nths(\"abcd\", [1,2], \"ad\").\n\nslots_couplings(Slots,\
+          \ F-S) :-\n        nth0(F, Slots, S1),\n        nth0(S, Slots, S2),\n  \
+          \      S2 #= S1 + 1.\n\nconstrain_subject(req(Class,Subj,_Teacher,_Num)-Slots)\
+          \ :-\n        strictly_ascending(Slots), % break symmetry\n        maplist(slot_quotient,\
+          \ Slots, Qs0),\n        findall(F-S, coupling(Class,Subj,F,S), Cs),\n  \
+          \      maplist(slots_couplings(Slots), Cs),\n        pairs_values(Cs, Seconds0),\n\
+          \        sort(Seconds0, Seconds),\n        list_without_nths(Qs0, Seconds,\
+          \ Qs),\n        strictly_ascending(Qs).\n\n\nall_diff_from(Vs, F) :- maplist(#\\\
+          =(F), Vs).\n\nconstrain_class(Rs, Class) :-\n        tfilter(class_req(Class),\
+          \ Rs, Sub),\n        pairs_slots(Sub, Vs),\n        all_different(Vs),\n\
+          \        findall(S, class_freeslot(Class,S), Frees),\n        maplist(all_diff_from(Vs),\
+          \ Frees).\n\n\nconstrain_teacher(Rs, Teacher) :-\n        tfilter(teacher_req(Teacher),\
+          \ Rs, Sub),\n        pairs_slots(Sub, Vs),\n        all_different(Vs),\n\
+          \        findall(F, teacher_freeday(Teacher, F), Fs),\n        maplist(slot_quotient,\
+          \ Vs, Qs),\n        maplist(all_diff_from(Qs), Fs).\n\nsameroom_var(Reqs,\
+          \ r(Class,Subject,Lesson), Var) :-\n        memberchk(req(Class,Subject,_Teacher,_Num)-Slots,\
+          \ Reqs),\n        nth0(Lesson, Slots, Var).\n\nconstrain_room(Reqs, Room)\
+          \ :-\n        findall(r(Class,Subj,Less), room_alloc(Room,Class,Subj,Less),\
+          \ RReqs),\n        maplist(sameroom_var(Reqs), RReqs, Roomvars),\n     \
+          \   all_different(Roomvars).\n\n\nstrictly_ascending(Ls) :- chain(#<, Ls).\n\
+          \nclass_req(C0, req(C1,_S,_T,_N)-_, T) :- =(C0, C1, T).\n\nteacher_req(T0,\
+          \ req(_C,_S,T1,_N)-_, T) :- =(T0,T1,T).\n\npairs_slots(Ps, Vs) :-\n    \
+          \    pairs_values(Ps, Vs0),\n        append(Vs0, Vs).\n\n/* - - - - - -\
+          \ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n   Relate\
+          \ teachers and classes to list of days.\n\n   Each day is a list of subjects\
+          \ (for classes), and a list of\n   class/subject terms (for teachers). The\
+          \ predicate days_variables/2\n   yields a list of days with the right dimensions,\
+          \ where each element\n   is a free variable.\n\n   We use the atom 'free'\
+          \ to denote a free slot, and the compound terms\n   class_subject(C, S)\
+          \ and subject(S) to denote classes/subjects.\n   This clean symbolic distinction\
+          \ is used to support subjects\n   that are called 'free', and to improve\
+          \ generality and efficiency.\n- - - - - - - - - - - - - - - - - - - - -\
+          \ - - - - - - - - - - - - - - - - */\n\ndays_variables(Days, Vs) :-\n  \
+          \      slots_per_week(SPW),\n        slots_per_day(SPD),\n        NumDays\
+          \ #= SPW // SPD,\n        length(Days, NumDays),\n        length(Day, SPD),\n\
+          \        maplist(same_length(Day), Days),\n        append(Days, Vs).\n\n\
+          class_days(Rs, Class, Days) :-\n        days_variables(Days, Vs),\n    \
+          \    tfilter(class_req(Class), Rs, Sub),\n        foldl(v(Sub), Vs, 0, _).\n\
+          \nv(Rs, V, N0, N) :-\n        (   member(req(_,Subject,_,_)-Times, Rs),\n\
+          \            member(N0, Times) -> V = subject(Subject)\n        ;   V =\
+          \ free\n        ),\n        N #= N0 + 1.\n\nteacher_days(Rs, Teacher, Days)\
+          \ :-\n        days_variables(Days, Vs),\n        tfilter(teacher_req(Teacher),\
+          \ Rs, Sub),\n        foldl(v_teacher(Sub), Vs, 0, _).\n\nv_teacher(Rs, V,\
+          \ N0, N) :-\n        (   member(req(C,Subj,_,_)-Times, Rs),\n          \
+          \  member(N0, Times) -> V = class_subject(C, Subj)\n        ;   V = free\n\
+          \        ),\n        N #= N0 + 1.\n\n/* - - - - - - - - - - - - - - - -\
+          \ - - - - - - - - - - - - - - - - - - - - -\n   Print objects in roster.\n\
+          - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\
+          \ - */\n\nprint_classes(Rs) :-\n        classes(Cs),\n        phrase_to_stream(format_classes(Cs,\
+          \ Rs), user_output).\n\nformat_classes([], _) --> [].\nformat_classes([Class|Classes],\
+          \ Rs) -->\n        { class_days(Rs, Class, Days0),\n          transpose(Days0,\
+          \ Days) },\n        format_(\"Class: ~w~2n\", [Class]),\n        weekdays_header,\n\
+          \        align_rows(Days),\n        format_classes(Classes, Rs).\n\nalign_rows([])\
+          \ --> \"\\n\\n\\n\".\nalign_rows([R|Rs]) -->\n        align_row(R),\n  \
+          \      \"\\n\",\n        align_rows(Rs).\n\nalign_row([]) --> [].\nalign_row([R|Rs])\
+          \ -->\n        align_(R),\n        align_row(Rs).\n\nalign_(free)      \
+          \         --> align_(verbatim('')).\nalign_(class_subject(C,S)) --> align_(verbatim(C/S)).\n\
+          align_(subject(S))         --> align_(verbatim(S)).\nalign_(verbatim(Element))\
+          \  --> format_(\"~t~w~t~8+\", [Element]).\n\nprint_teachers(Rs) :-\n   \
+          \     teachers(Ts),\n        phrase_to_stream(format_teachers(Ts, Rs), user_output).\n\
+          \nformat_teachers([], _) --> [].\nformat_teachers([T|Ts], Rs) -->\n    \
+          \    { teacher_days(Rs, T, Days0),\n          transpose(Days0, Days) },\n\
+          \        format_(\"Teacher: ~w~2n\", [T]),\n        weekdays_header,\n \
+          \       align_rows(Days),\n        format_teachers(Ts, Rs).\n\nweekdays_header\
+          \ -->\n        { maplist(with_verbatim,\n                  ['Mon','Tue','Wed','Thu','Fri'],\n\
+          \                  Vs) },\n        align_row(Vs),\n        format_(\"~n~`=t~40|~n\"\
+          , []).\n\nwith_verbatim(T, verbatim(T)).\n\n/* - - - - - - - - - - - - -\
+          \ - - - - - - - - - - - - - - - - - - - - - - - -\n   ?- consult('reqs_example.pl'),\n\
+          \      requirements_variables(Rs, Vs),\n      labeling([ff], Vs),\n    \
+          \  print_classes(Rs).\n   %@ Class: 1a\n   %@\n   %@   Mon     Tue     Wed\
+          \     Thu     Fri\n   %@ ========================================\n   %@\
+          \   mat     mat     mat     mat     mat\n   %@   eng     eng     eng\n \
+          \  %@    h       h\n\n- - - - - - - - - - - - - - - - - - - - - - - - -\
+          \ - - - - - - - - - - - - */\n\n{{ requirements }}\n"
+        title: Template
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1793910482283'
+          - requirements
+          value_type: string
+          variable: requirements
+      height: 50
+      id: '1793914819537'
+      position:
+        x: -98.11321418320478
+        y: 119.18932637092374
+      positionAbsolute:
+        x: -98.11321418320478
+        y: 119.18932637092374
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: 57.587106295982665
+      y: 203.86504091818458
+      zoom: 0.7817764167774939
+  rag_pipeline_variables: []
