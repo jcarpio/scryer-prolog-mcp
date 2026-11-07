@@ -1,0 +1,27 @@
+# Reconstructed verified MCP Compose service; copy to the repository root.
+services:
+  scryer-prolog-mcp:
+    image: pld-scryer-mcp:0.1
+    container_name: pld-scryer-prolog-mcp
+    restart: unless-stopped
+    init: true
+    environment:
+      SUPERGATEWAY_API_KEY: ${MCP_API_KEY:?MCP_API_KEY is required}
+      SCRYER_SESSIONS: /sessions
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m
+      - /sessions:rw,nosuid,nodev,size=32m,uid=1000,gid=1000
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 512m
+    cpus: 1.0
+    networks:
+      - dify
+networks:
+  dify:
+    external: true
+    name: pld-dify_default
