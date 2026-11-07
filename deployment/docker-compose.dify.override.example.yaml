@@ -1,0 +1,9 @@
+# Merge into the EXISTING Dify docker-compose.override.yaml.
+# Preserve the existing plugin_daemon override and any other local customizations.
+services:
+  plugin_daemon:
+    ports: !override
+      - "127.0.0.1:5003:5003"
+  ssrf_proxy:
+    environment:
+      SSRF_PROXY_ALLOW_PRIVATE_DOMAINS: "pld-scryer-prolog-mcp"
